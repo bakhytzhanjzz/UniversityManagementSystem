@@ -1,22 +1,30 @@
 package com.bakhytzhan.ums.controller;
 
+import com.bakhytzhan.ums.dto.auth.AuthResponse;
+import com.bakhytzhan.ums.dto.auth.LoginRequest;
+import com.bakhytzhan.ums.dto.auth.RegisterRequest;
+import com.bakhytzhan.ums.model.User;
 import com.bakhytzhan.ums.security.JwtUtil;
+import com.bakhytzhan.ums.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
-    public AuthController(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+    @PostMapping("/register")
+    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(userService.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String email) {
-        String token = jwtUtil.generateToken(email);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(userService.login(request));
     }
 }
+

@@ -1,14 +1,14 @@
 package com.bakhytzhan.ums.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Setter
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User {
@@ -36,27 +36,22 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public User() {
-        // Default constructor
-    }
-
     public User(String fullName, String email, String password, Role role) {
         this.fullName = fullName;
         this.email = email;
         this.password = password;
         this.role = role;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     @PrePersist
     protected void onCreate() {
-        createdAt = updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
-
 }
