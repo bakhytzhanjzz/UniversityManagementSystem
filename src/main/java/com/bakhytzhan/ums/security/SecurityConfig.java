@@ -25,11 +25,12 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/auth/register", "/auth/login").permitAll() // Public access to auth endpoints
+                        .requestMatchers(HttpMethod.GET, "api/users/**").hasRole("ADMIN") // Only ADMINs can access /users endpoints
+                        .anyRequest().authenticated() // All other requests must be authenticated
                 )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions (no sessions stored)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter before default filter
                 .build();
     }
 
