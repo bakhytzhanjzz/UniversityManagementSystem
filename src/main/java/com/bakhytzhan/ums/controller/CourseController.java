@@ -1,5 +1,8 @@
 package com.bakhytzhan.ums.controller;
 
+import com.bakhytzhan.ums.dto.CreateCourseRequest;
+import com.bakhytzhan.ums.dto.UpdateCourseRequest;
+import com.bakhytzhan.ums.mapper.CourseMapper;
 import com.bakhytzhan.ums.model.Course;
 import com.bakhytzhan.ums.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +26,16 @@ public class CourseController {
     }
 
     @PostMapping
-    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
+    public ResponseEntity<Course> createCourse(@RequestBody CreateCourseRequest request) {
+        // Map DTO to Entity
+        Course course = CourseMapper.toCourse(request);
+
+        // Pass the entity to the service layer
         Course createdCourse = courseService.createCourse(course);
+
         return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
     }
+
 
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
@@ -42,14 +51,19 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Course> updateCourse(@PathVariable UUID id, @RequestBody Course courseDetails) {
+    public ResponseEntity<Course> updateCourse(@PathVariable UUID id, @RequestBody UpdateCourseRequest request) {
         try {
-            Course updatedCourse = courseService.updateCourse(id, courseDetails);
-            return new ResponseEntity<>(updatedCourse, HttpStatus.OK);
+            Course course = courseService.getCourseById(id)
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+
+            CourseMapper.updateCourse(course, request);
+            courseService.updateCourse(id, course);
+            return ResponseEntity.ok(course);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourse(@PathVariable UUID id) {
