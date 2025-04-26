@@ -1,103 +1,122 @@
-package com.bakhytzhan.ums.service;
+    package com.bakhytzhan.ums.service;
 
-import com.bakhytzhan.ums.dto.auth.AuthResponse;
-import com.bakhytzhan.ums.dto.auth.LoginRequest;
-import com.bakhytzhan.ums.dto.auth.RegisterRequest;
-import com.bakhytzhan.ums.model.Role;
-import com.bakhytzhan.ums.model.User;
-import com.bakhytzhan.ums.repository.UserRepository;
-import com.bakhytzhan.ums.security.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+    import com.bakhytzhan.ums.dto.auth.AuthResponse;
+    import com.bakhytzhan.ums.dto.auth.LoginRequest;
+    import com.bakhytzhan.ums.dto.auth.RegisterRequest;
+    import com.bakhytzhan.ums.model.Role;
+    import com.bakhytzhan.ums.model.Student;
+    import com.bakhytzhan.ums.model.User;
+    import com.bakhytzhan.ums.repository.UserRepository;
+    import com.bakhytzhan.ums.security.JwtUtil;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.security.authentication.AuthenticationManager;
+    import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+    import org.springframework.security.core.userdetails.UsernameNotFoundException;
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+    import java.util.List;
+    import java.util.Optional;
+    import java.util.UUID;
 
-@Service
-public class UserService {
+    @Service
+    public class UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtService;
+        private final UserRepository userRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final AuthenticationManager authenticationManager;
+        private final JwtUtil jwtService;
+        private final StudentService studentService;
 
 
-    @Autowired
-    public UserService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
-            JwtUtil jwtService
-    ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
-    }
-
-    public User register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new RuntimeException("Email already registered");
+        @Autowired
+        public UserService(
+                UserRepository userRepository,
+                PasswordEncoder passwordEncoder,
+                AuthenticationManager authenticationManager,
+                JwtUtil jwtService,
+                StudentService studentService
+        ) {
+            this.userRepository = userRepository;
+            this.passwordEncoder = passwordEncoder;
+            this.authenticationManager = authenticationManager;
+            this.jwtService = jwtService;
+            this.studentService = studentService;
         }
 
-        User user = new User(
-                request.fullName(),
-                request.email(),
-                passwordEncoder.encode(request.password()),
-                Role.valueOf(request.role().toUpperCase())
-        );
+        public User register(RegisterRequest request) {
+            if (userRepository.existsByEmail(request.email())) {
+                throw new RuntimeException("Email already registered");
+            }
 
-        return userRepository.save(user);
-    }
+            User user = new User(
+                    request.firstName(),
+                    request.lastName(),
+                    request.email(),
+                    passwordEncoder.encode(request.password()),
+                    Role.valueOf(request.role().toUpperCase())
+            );
 
-    public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
-        );
 
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            User savedUser = userRepository.save(user);
 
-        String token = jwtService.generateToken(user);
-        return new AuthResponse(token);
-    }
+            if (savedUser.getRole() == Role.STUDENT) {
+                Student student = new Student();
+                student.setFirstName(savedUser.getFirstName());
+                student.setLastName(savedUser.getLastName());
+                student.setEmail(savedUser.getEmail());
+                student.setUser(savedUser);
+                studentService.createStudent(student);
+            }
 
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
+            return savedUser;
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
+        }
 
-    public Optional<User> getUserById(UUID id) {
-        return userRepository.findById(id);
-    }
+        public AuthResponse login(LoginRequest request) {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+            );
 
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
+            User user = userRepository.findByEmail(request.email())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-    public User updateUser(UUID id, User userDetails) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            User existingUser = user.get();
-            existingUser.setFullName(userDetails.getFullName());
-            existingUser.setEmail(userDetails.getEmail());
-            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-            existingUser.setRole(userDetails.getRole());
-            return userRepository.save(existingUser);
-        } else {
-            throw new RuntimeException("User not found with ID " + id);
+            String token = jwtService.generateToken(user);
+            return new AuthResponse(token);
+        }
+
+        public User createUser(User user) {
+            return userRepository.save(user);
+        }
+
+        public List<User> getAllUsers() {
+            return userRepository.findAll();
+        }
+
+        public Optional<User> getUserById(UUID id) {
+            return userRepository.findById(id);
+        }
+
+        public Optional<User> getUserByEmail(String email) {
+            return userRepository.findByEmail(email);
+        }
+
+        public User updateUser(UUID id, User userDetails) {
+            Optional<User> user = userRepository.findById(id);
+            if (user.isPresent()) {
+                User existingUser = user.get();
+                existingUser.setFirstName(userDetails.getFirstName());
+                existingUser.setLastName(userDetails.getLastName());
+                existingUser.setEmail(userDetails.getEmail());
+                existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+                existingUser.setRole(userDetails.getRole());
+                return userRepository.save(existingUser);
+            } else {
+                throw new RuntimeException("User not found with ID " + id);
+            }
+        }
+
+        public void deleteUser(UUID id) {
+            userRepository.deleteById(id);
         }
     }
-
-    public void deleteUser(UUID id) {
-        userRepository.deleteById(id);
-    }
-}

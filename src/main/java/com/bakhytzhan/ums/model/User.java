@@ -17,8 +17,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
-    private String fullName;
+    @Column(nullable = false, length = 50)
+    private String firstName;
+
+    @Column(nullable = false, length = 50)
+    private String lastName;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -36,8 +39,9 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public User(String fullName, String email, String password, Role role) {
-        this.fullName = fullName;
+    public User(String firstName, String lastName, String email, String password, Role role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
