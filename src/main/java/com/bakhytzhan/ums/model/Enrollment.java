@@ -1,29 +1,34 @@
 package com.bakhytzhan.ums.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import java.time.LocalDate;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.UUID;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Enrollment {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "student_id")
+    @ManyToOne
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "course_id")
+    @ManyToOne
+    @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    private LocalDate enrollmentDate;
+    @Column(name = "enrollment_date")
+    private String enrollmentDate;
+
+    public Enrollment(Student student, Course course) {
+        this.student = student;
+        this.course = course;
+        this.enrollmentDate = java.time.LocalDate.now().toString(); // Default enrollment date
+    }
 }
