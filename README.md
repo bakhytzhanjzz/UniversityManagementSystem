@@ -25,7 +25,7 @@ cd UniversityManagementSystem
 ### 3. Start PostgreSQL with Docker
 Run the following command to start a PostgreSQL container:
 ```bash
-docker run --name ums_postgres -e POSTGRES_DB=ums_db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:latest
+docker run --name ums_postgres -e POSTGRES_DB=ums -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=1234 -p 5432:5432 -d postgres:latest
 ```
 
 Make sure port 5432 is not already used on your computer.
