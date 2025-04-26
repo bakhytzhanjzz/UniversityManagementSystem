@@ -1,5 +1,6 @@
 package com.bakhytzhan.ums.service;
 
+import com.bakhytzhan.ums.exception.ResourceNotFoundException;
 import com.bakhytzhan.ums.model.Student;
 import com.bakhytzhan.ums.repository.StudentRepository;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class StudentService {
 
     public Student updateStudent(UUID id, Student studentDetails) {
         Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
         existingStudent.setFirstName(studentDetails.getFirstName());
         existingStudent.setLastName(studentDetails.getLastName());

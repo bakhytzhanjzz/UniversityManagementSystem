@@ -1,5 +1,6 @@
 package com.bakhytzhan.ums.service;
 
+import com.bakhytzhan.ums.exception.ResourceNotFoundException;
 import com.bakhytzhan.ums.model.Course;
 import com.bakhytzhan.ums.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class CourseService {
 
     public Course updateCourse(UUID id, Course courseDetails) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
 
         course.setName(courseDetails.getName());
         course.setDescription(courseDetails.getDescription());
